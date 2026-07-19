@@ -2,10 +2,10 @@
 """Training Script"""
 import os
 import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import argparse
 import torch
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from env.factory_env import FactoryEnv
 from models.policy_network import PolicyNetwork
