@@ -11,6 +11,7 @@ class AgentManager:
         self.working_hours = [0] * num_agents
         self.charging_progress = [0.0] * num_agents
         self.agent_status = ['available'] * num_agents
+        self.agent_station = [None] * num_agents  # Track which station each agent is assigned to
     
     def assign_to_work(self, num_agents):
         available_indices = [i for i in range(self.total_agents) 
@@ -34,10 +35,31 @@ class AgentManager:
                 self.working -= 1
                 self.available += 1
             self.agent_status[idx] = 'charging'
+            self.agent_station[idx] = 'fast_charge'
             self.charging_progress[idx] = 0.0
         self.available -= num_to_charge
         self.charging += num_to_charge
         return num_to_charge
+    
+    def assign_agent_to_station(self, agent_id, station_name):
+        """Assign a specific agent to a station"""
+        if agent_id < self.total_agents:
+            self.agent_station[agent_id] = station_name
+    
+    def get_agent_allocations(self):
+        """Get a dictionary mapping station names to list of agent IDs assigned to them"""
+        allocations = {}
+        for agent_id in range(self.total_agents):
+            station = self.agent_station[agent_id]
+            if station is not None:
+                if station not in allocations:
+                    allocations[station] = []
+                allocations[station].append(agent_id)
+        return allocations
+    
+    def clear_agent_allocations(self):
+        """Clear all agent station assignments"""
+        self.agent_station = [None] * self.total_agents
     
     def progress_charging(self):
         for i in range(self.total_agents):
@@ -46,6 +68,7 @@ class AgentManager:
                 self.battery_levels[i] = min(1.0, self.battery_levels[i] + 1/FAST_CHARGE_TIME)
                 if self.charging_progress[i] >= 1.0 or self.battery_levels[i] >= 1.0:
                     self.agent_status[i] = 'available'
+                    self.agent_station[i] = None
                     self.charging_progress[i] = 0.0
         self._recalculate_counts()
     
@@ -58,6 +81,7 @@ class AgentManager:
             self.battery_levels[i] = 1.0
             self.working_hours[i] = 0
             self.charging_progress[i] = 0.0
+            self.agent_station[i] = None
     
     def end_work_hour(self):
         for i in range(self.total_agents):
@@ -66,6 +90,7 @@ class AgentManager:
                 self.battery_levels[i] = max(0, self.battery_levels[i] - 1/AGENT_BATTERY_CAPACITY)
                 if self.battery_levels[i] <= 0:
                     self.agent_status[i] = 'available'
+                    self.agent_station[i] = None
         self.progress_charging()
         self._recalculate_counts()
     

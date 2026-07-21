@@ -12,9 +12,11 @@ def main():
     parser.add_argument('--num-agents', type=int, default=10)
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--num-episodes', type=int, default=5)
+    parser.add_argument('--test', action='store_true', help='Print detailed agent allocations per hour')
     args = parser.parse_args()
     
     env = FactoryEnv(num_agents=args.num_agents)
+    env.test_mode = args.test
     
     for episode in range(args.num_episodes):
         print(f'\n=== Episode {episode+1} ===')
@@ -27,6 +29,11 @@ def main():
         
         for hour in range(16):
             next_state, reward, done, info = env.step(action)
+            
+            if args.test:
+                # Print agent allocations for this hour
+                env.print_agent_allocations()
+            
             if args.render:
                 env.render('human')
             
