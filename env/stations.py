@@ -67,11 +67,21 @@ class AssemblyStation(Station):
     def __init__(self):
         super().__init__("assembly", ASSEMBLY_PRODUCTION_RATE, ASSEMBLY_STATION_CAPACITY, "car")
         self.car_requirements = CAR_REQUIREMENTS.copy()
+        self.can_produce = False
     
     def produce(self, warehouse):
         if self.assigned_agents == 0:
             self.time_since_last_production = 0
+            self.can_produce = False
             return None
+        
+        # Check if we have enough resources to assemble
+        if not warehouse.has_resources(self.car_requirements):
+            # No resources available, agents are idle
+            self.can_produce = False
+            return None
+        
+        self.can_produce = True
         self.time_since_last_production += 1
         effective_rate = max(1, self.production_rate - self.assigned_agents + 1)
         if self.time_since_last_production >= effective_rate:
@@ -86,6 +96,10 @@ class AssemblyStation(Station):
         if self.assigned_agents == 0:
             return float('inf')
         return max(1, self.production_rate - self.assigned_agents + 1)
+    
+    def can_produce_this_hour(self, warehouse):
+        """Check if this station can produce given current warehouse state"""
+        return self.assigned_agents > 0 and warehouse.has_resources(self.car_requirements)
 
 def create_stations():
     return {

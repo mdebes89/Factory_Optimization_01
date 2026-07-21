@@ -79,11 +79,13 @@ class FactoryEnv(gym.Env):
         self.agents_used_this_hour = 0
         self.fast_charges_this_hour = 0
         self.agent_allocations_this_hour = {}
+        
         self._process_action(action)
         self.current_hour += 1
         self._produce_resources()
         self._assemble_cars()
         self.agent_manager.end_work_hour()
+        
         reward = self._calculate_reward()
         self.episode_reward += reward
         done = self.current_hour >= WORKING_HOURS_PER_DAY
@@ -105,9 +107,9 @@ class FactoryEnv(gym.Env):
         # Track agent assignments for each station
         agent_id = 0
         
-        # Process stations in order
-        station_order = ['wheel_1', 'wheel_2', 'door_1', 'door_2', 'chassis', 'engine', 'assembly']
-        for station_name in station_order:
+        # Process component stations first
+        component_stations = ['wheel_1', 'wheel_2', 'door_1', 'door_2', 'chassis', 'engine']
+        for station_name in component_stations:
             if station_name in action:
                 num_agents = action[station_name]
                 self.stations[station_name].assign_agents(num_agents)
@@ -120,6 +122,25 @@ class FactoryEnv(gym.Env):
                         self.agent_allocations_this_hour[station_name].append(agent_id)
                         agent_id += 1
                 total_assigned += num_agents
+        
+        # Process assembly station - only assign agents if we can actually assemble
+        if 'assembly' in action:
+            num_agents = action['assembly']
+            # Check if we have enough resources to assemble
+            if self.warehouse.has_resources(CAR_REQUIREMENTS):
+                # Only assign agents if we can actually produce
+                self.stations['assembly'].assign_agents(num_agents)
+                for i in range(num_agents):
+                    if agent_id < self.num_agents:
+                        self.agent_manager.assign_agent_to_station(agent_id, 'assembly')
+                        if 'assembly' not in self.agent_allocations_this_hour:
+                            self.agent_allocations_this_hour['assembly'] = []
+                        self.agent_allocations_this_hour['assembly'].append(agent_id)
+                        agent_id += 1
+                total_assigned += num_agents
+            else:
+                # Can't assemble, don't assign agents
+                self.stations['assembly'].assign_agents(0)
         
         # Process fast charging
         if 'fast_charge' in action:
