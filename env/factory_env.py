@@ -173,8 +173,10 @@ class FactoryEnv(gym.Env):
             print(self.agent_manager)
     
     def print_agent_allocations(self):
-        """Print agent allocations for the current hour"""
-        print(f"\n--- Hour {self.current_hour} Agent Allocations ---")
+        """Print agent allocations and inventory for the current hour"""
+        print(f"\n--- Hour {self.current_hour} ---")
+        print("Inventory:", self.warehouse.get_state())
+        print("Agent Allocations:")
         allocations = self.agent_allocations_this_hour
         for station_name in ['wheel_1', 'wheel_2', 'door_1', 'door_2', 'chassis', 'engine', 'assembly', 'fast_charge']:
             agents = allocations.get(station_name, [])
