@@ -31,7 +31,7 @@ To produce one car, the assembly station requires:
 - 1 chassis
 - 1 engine
 
-All components must be available in the warehouse simultaneously for car assembly to occur.
+All components must be available in the warehouse simultaneously for car assembly to occur. **Note**: Agents are only assigned to the assembly station when all required components are available in the warehouse.
 
 ### Agent Constraints
 
@@ -86,7 +86,9 @@ Factory_Optimization_01/
 ├── config/              # Configuration files for environment and training
 ├── env/                 # Factory environment implementation
 │   ├── factory_env.py   # Main RL environment
-│   └── ...
+│   ├── stations.py      # Station classes (Wheel, Door, Chassis, Engine, Assembly)
+│   ├── warehouse.py     # Warehouse management
+│   └── agents.py        # Agent manager
 ├── models/              # Neural network models
 ├── algorithms/          # RL algorithms (PPO, A2C, etc.)
 ├── utils/               # Utility functions and helpers
@@ -109,7 +111,11 @@ pip install -r requirements.txt
 
 ### Test the Environment
 ```bash
+# Basic test
 python scripts/test_env.py --render
+
+# Test with detailed output (shows agent allocations and inventory per hour)
+python scripts/test_env.py --test --num-agents 10 --num-episodes 1
 ```
 
 ### Train the RL Agent
@@ -143,6 +149,11 @@ E[Σ (reward_production - reward_costs)]
 2. **Cost per Car**: Total agent and charging costs divided by cars produced
 3. **Component Utilization**: Percentage of produced components used in car assembly
 4. **Agent Efficiency**: Cars produced per agent used
+
+## Recent Changes
+
+- **Test Mode Enhancement**: Added `--test` flag to `test_env.py` that prints detailed agent allocations and inventory for each hour
+- **Assembly Station Fix**: Agents are now only assigned to the assembly station when all required components (4 wheels, 4 doors, 1 chassis, 1 engine) are available in the warehouse
 
 ## Future Enhancements
 
