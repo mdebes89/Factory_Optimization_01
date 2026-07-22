@@ -109,23 +109,12 @@ def main():
         if len(last_rewards) > 10:
             last_rewards.pop(0)
         
-        # Print every 10 episodes with average
-        if (episode + 1) % 10 == 0:
+        # Print every 10 episodes with average and save model
+        if (episode + 1) % args.save_interval == 0:
             avg_reward = sum(last_rewards) / len(last_rewards)
-            # Use carriage return to override previous line
-            print(f'\rEpisode {episode+1}: Avg Reward (last 10) = {avg_reward:.2f}', end='', flush=True)
-            
-            # If it's also a save interval, print model saved on a new line
-            if (episode + 1) % args.save_interval == 0:
-                model_path = os.path.join(args.save_dir, f'{args.algorithm}_ep{episode+1}.pth')
-                agent.save(model_path)
-                print(f'\nModel saved to {model_path}')
-        
-        # For save intervals that aren't multiples of 10
-        elif (episode + 1) % args.save_interval == 0:
             model_path = os.path.join(args.save_dir, f'{args.algorithm}_ep{episode+1}.pth')
             agent.save(model_path)
-            print(f'\rEpisode {episode+1}: Reward = {episode_reward:.2f}, Model saved to {model_path}', end='', flush=True)
+            print(f'\rEpisode {episode+1}: Avg Reward (last 10) = {avg_reward:.2f}, Model saved to {model_path}', end='', flush=True)
     
     # Print a newline at the end to ensure clean output
     print()
