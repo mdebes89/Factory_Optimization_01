@@ -6,7 +6,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import argparse
 import torch
-import numpy as np
 
 from env.factory_env import FactoryEnv
 from models.policy_network import PolicyNetwork
@@ -87,6 +86,9 @@ def main():
     os.makedirs(args.save_dir, exist_ok=True)
     os.makedirs(args.log_dir, exist_ok=True)
     
+    # Store last 10 episode rewards for average calculation
+    last_rewards = []
+    
     for episode in range(args.num_episodes):
         state = env.reset()
         episode_reward = 0
@@ -100,12 +102,33 @@ def main():
             if done:
                 break
         
-        if (episode + 1) % args.save_interval == 0:
+        # Store the reward
+        last_rewards.append(episode_reward)
+        
+        # Keep only the last 10 rewards
+        if len(last_rewards) > 10:
+            last_rewards.pop(0)
+        
+        # Print every 10 episodes with average
+        if (episode + 1) % 10 == 0:
+            avg_reward = sum(last_rewards) / len(last_rewards)
+            # Use carriage return to override previous line
+            print(f'\rEpisode {episode+1}: Avg Reward (last 10) = {avg_reward:.2f}', end='', flush=True)
+            
+            # If it's also a save interval, print model saved on a new line
+            if (episode + 1) % args.save_interval == 0:
+                model_path = os.path.join(args.save_dir, f'{args.algorithm}_ep{episode+1}.pth')
+                agent.save(model_path)
+                print(f'\nModel saved to {model_path}')
+        
+        # For save intervals that aren't multiples of 10
+        elif (episode + 1) % args.save_interval == 0:
             model_path = os.path.join(args.save_dir, f'{args.algorithm}_ep{episode+1}.pth')
             agent.save(model_path)
-            print(f'Episode {episode+1}: Reward = {episode_reward:.2f}, Model saved to {model_path}')
-        else:
-            print(f'Episode {episode+1}: Reward = {episode_reward:.2f}')
+            print(f'\rEpisode {episode+1}: Reward = {episode_reward:.2f}, Model saved to {model_path}', end='', flush=True)
+    
+    # Print a newline at the end to ensure clean output
+    print()
     
     final_path = os.path.join(args.save_dir, f'{args.algorithm}_final.pth')
     agent.save(final_path)
