@@ -52,3 +52,7 @@ AGENT_USAGE_COST = -0.1
 DEFAULT_NUM_AGENTS = 10
 RESOURCE_NAMES = ['wheel', 'door', 'chassis', 'engine', 'car']
 ALL_STATION_NAMES = ['wheel_1', 'wheel_2', 'door_1', 'door_2', 'chassis', 'engine', 'assembly']
+
+# Penalty for unused components at end of day
+# This incentivizes the agent to assemble cars rather than stockpile components
+UNUSED_COMPONENT_PENALTY = -0.5  # Penalty per unused component at day end

@@ -8,7 +8,7 @@ from .agents import AgentManager
 from config.factory_config import (
     WORKING_HOURS_PER_DAY, DEFAULT_NUM_AGENTS,
     REWARDS, AGENT_USAGE_COST, FAST_CHARGE_COST,
-    ALL_STATION_NAMES, CAR_REQUIREMENTS
+    ALL_STATION_NAMES, CAR_REQUIREMENTS, UNUSED_COMPONENT_PENALTY
 )
 
 class FactoryEnv(gym.Env):
@@ -87,10 +87,15 @@ class FactoryEnv(gym.Env):
         self.agent_manager.end_work_hour()
         
         reward = self._calculate_reward()
-        self.episode_reward += reward
         done = self.current_hour >= WORKING_HOURS_PER_DAY
+        
+        # Add penalty for unused components at the end of the day
         if done:
+            reward += self._calculate_unused_components_penalty()
             self.day_complete = True
+        
+        self.episode_reward += reward
+        
         return self._get_observation(), reward, done, {
             'hour': self.current_hour,
             'production': self.new_production.copy(),
@@ -99,6 +104,15 @@ class FactoryEnv(gym.Env):
             'warehouse': self.warehouse.get_state(),
             'agent_allocations': self.agent_allocations_this_hour.copy()
         }
+    
+    def _calculate_unused_components_penalty(self):
+        """Calculate penalty for unused components at end of day"""
+        penalty = 0.0
+        # Only penalize components that can be used in car assembly
+        for component, requirement in CAR_REQUIREMENTS.items():
+            unused_count = self.warehouse.get_resource_count(component)
+            penalty += unused_count * UNUSED_COMPONENT_PENALTY
+        return penalty
     
     def _process_action(self, action):
         total_assigned = 0
