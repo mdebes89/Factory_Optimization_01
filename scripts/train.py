@@ -235,18 +235,22 @@ def train_with_preset(args):
             model_path = os.path.join(args.save_dir, f'{algorithm_name}_ep{episode+1}.pth')
             agent.save(model_path)
             
-            print(f'Episode {episode+1:6d}/{num_episodes:6d} | '
+            print(f'\rEpisode {episode+1:6d}/{num_episodes:6d} | '
                   f'Avg Reward (last {len(last_rewards)}): {avg_reward:7.2f} | '
                   f'Best Reward: {best_reward:7.2f} | '
                   f'Time: {elapsed_time:6.1f}s | '
                   f'Speed: {episodes_per_sec:6.2f} ep/s | '
-                  f'Model saved to {model_path}')
+                  f'Model saved to {model_path}', end='', flush=True)
             
-            # If monitoring is enabled, print more details
+            # If monitoring is enabled, print more details on new lines
             if args.monitor:
+                print()  # New line after the progress line
                 print(f'  Current episode reward: {episode_reward:.2f}')
                 if algorithm_name == 'ppo':
                     print(f'  Current loss: {episode_loss:.4f}')
+    
+    # Print newline at the end to ensure clean output
+    print()
     
     # Save final model
     final_path = os.path.join(args.save_dir, f'{algorithm_name}_final.pth')
